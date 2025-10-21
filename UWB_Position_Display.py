@@ -4,19 +4,18 @@ import cmath
 import socket
 import json
 
-hostname = socket.gethostname()
-UDP_IP = socket.gethostbyname(hostname)
+UDP_IP = "0.0.0.0"
+UDP_PORT = 8001
 print("***Local ip:" + str(UDP_IP) + "***")
-UDP_PORT = 80
+
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.bind((UDP_IP, UDP_PORT))
-sock.listen(1)  # 接收的连接数
+sock.listen(1)  # 接收的連接數
 data, addr = sock.accept()
 
 distance_a1_a2 = 3.0
 meter2pixel = 100
 range_offset = 0.9
-
 
 def screen_init(width=1200, height=800, t=turtle):
     t.setup(width, height)
@@ -183,13 +182,13 @@ def main():
         list = read_data()
 
         for one in list:
-            if one["A"] == "1782":
+            if one["A"] == "1785":
                 clean(t_a1)
                 a1_range = uwb_range_offset(float(one["R"]))
                 draw_uwb_anchor(-250, 150, "A1782(0,0)", a1_range, t_a1)
                 node_count += 1
 
-            if one["A"] == "1783":
+            if one["A"] == "1786":
                 clean(t_a2)
                 a2_range = uwb_range_offset(float(one["R"]))
                 draw_uwb_anchor(-250 + meter2pixel * distance_a1_a2,
