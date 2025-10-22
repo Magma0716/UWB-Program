@@ -4,7 +4,7 @@ import cmath
 import socket
 import json
 
-UDP_IP = "10.238.7.37"
+UDP_IP = "10.238.7.37" # 需要改成自己的電腦 IP (cmd -> ipconfig)
 UDP_PORT = 8001
 print("*** UDP listening on {}:{} ***".format(UDP_IP, UDP_PORT))
 
