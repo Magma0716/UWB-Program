@@ -4,14 +4,13 @@ import cmath
 import socket
 import json
 
-UDP_IP = "0.0.0.0"
+UDP_IP = "10.238.7.37"
 UDP_PORT = 8001
-print("***Local ip:" + str(UDP_IP) + "***")
+print("*** UDP listening on {}:{} ***".format(UDP_IP, UDP_PORT))
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((UDP_IP, UDP_PORT))
-sock.listen(1)  # 接收的連接數
-data, addr = sock.accept()
+sock.settimeout(0.5)
 
 distance_a1_a2 = 3.0
 meter2pixel = 100
@@ -122,27 +121,6 @@ def draw_uwb_tag(x, y, txt, t):
               "black",  t, f=('Arial', 16, 'normal'))
 
 
-def read_data():
-
-    line = data.recv(1024).decode('UTF-8')
-
-    uwb_list = []
-
-    try:
-        uwb_data = json.loads(line)
-        print(uwb_data)
-
-        uwb_list = uwb_data["links"]
-        for uwb_archor in uwb_list:
-            print(uwb_archor)
-
-    except:
-        print(line)
-    print("")
-
-    return uwb_list
-
-
 def tag_pos(a, b, c):
     # p = (a + b + c) / 2.0
     # s = cmath.sqrt(p * (p - a) * (p - b) * (p - c))
@@ -162,7 +140,6 @@ def uwb_range_offset(uwb_range):
 
 
 def main():
-
     t_ui = turtle.Turtle()
     t_a1 = turtle.Turtle()
     t_a2 = turtle.Turtle()
@@ -178,33 +155,44 @@ def main():
     draw_ui(t_ui)
 
     while True:
-        node_count = 0
-        list = read_data()
+        try:
+            data, address = sock.recvfrom(4096)
+        except socket.timeout:
+            data = None
 
-        for one in list:
-            if one["A"] == "1785":
-                clean(t_a1)
-                a1_range = uwb_range_offset(float(one["R"]))
-                draw_uwb_anchor(-250, 150, "A1782(0,0)", a1_range, t_a1)
-                node_count += 1
+        if data:
+            text = data.decode('utf-8')
+            print(f"Received message: '{text}' from {address}")
 
-            if one["A"] == "1786":
-                clean(t_a2)
-                a2_range = uwb_range_offset(float(one["R"]))
-                draw_uwb_anchor(-250 + meter2pixel * distance_a1_a2,
-                                150, "A1783(" + str(distance_a1_a2)+")", a2_range, t_a2)
-                node_count += 1
+            try:
+                List = json.loads(text)["links"]
+            except Exception as e:
+                print("JSON decode error:", e)
+                List = []
 
-        if node_count == 2:
-            x, y = tag_pos(a2_range, a1_range, distance_a1_a2)
-            print(x, y)
-            clean(t_a3)
-            draw_uwb_tag(x, y, "TAG", t_a3)
+            node_count = 0
+            for one in List:
+                if one["A"] == "1785":
+                    clean(t_a1)
+                    a1_range = uwb_range_offset(float(one["R"]))
+                    draw_uwb_anchor(-250, 150, "A1785(0,0)", a1_range, t_a1)
+                    node_count += 1
 
-        time.sleep(0.1)
+                if one["A"] == "1786":
+                    clean(t_a2)
+                    a2_range = uwb_range_offset(float(one["R"]))
+                    draw_uwb_anchor(-250 + meter2pixel * distance_a1_a2,
+                                    150, "A1786(" + str(distance_a1_a2)+")", a2_range, t_a2)
+                    node_count += 1
 
-    turtle.mainloop()
+            if node_count == 2:
+                x, y = tag_pos(a2_range, a1_range, distance_a1_a2)
+                print(x, y)
+                clean(t_a3)
+                draw_uwb_tag(x, y, "TAG", t_a3)
 
+        turtle.update()
+        time.sleep(0.05)
 
 if __name__ == '__main__':
     main()

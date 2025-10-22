@@ -6,6 +6,7 @@ For ESP32 UWB or ESP32 UWB Pro
 
 #include <SPI.h>
 #include <DW1000Ranging.h>
+#include <WiFiUdp.h>
 #include <WiFi.h>
 #include "link.h"
 
@@ -18,11 +19,11 @@ For ESP32 UWB or ESP32 UWB Pro
 
 const char *ssid = "Galaxy A42 5G5F5E";
 const char *password = "07160716";
-const char *host = "192.168.0.108";
-WiFiClient client;
+const char *host = "10.238.7.37";
+const int port = 8001;
+WiFiUDP udp;
 
 struct MyLink *uwb_data;
-int index_num = 0;
 long runtime = 0;
 String all_json = "";
 
@@ -42,16 +43,7 @@ void setup()
     Serial.print("IP Address:");
     Serial.println(WiFi.localIP());
 
-    if (client.connect(host, 80))
-    {
-        Serial.println("Success");
-        client.print(String("GET /") + " HTTP/1.1\r\n" +
-                     "Host: " + host + "\r\n" +
-                     "Connection: close\r\n" +
-                     "\r\n");
-    }
-
-    delay(1000);
+    delay(500);
 
     //init the configuration
     SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
@@ -79,8 +71,6 @@ void loop()
 
 void newRange()
 {
-    char c[30];
-
     Serial.print("from: ");
     Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
     Serial.print("\t Range: ");
@@ -111,9 +101,20 @@ void inactiveDevice(DW1000Device *device)
 
 void send_udp(String *msg_json)
 {
-    if (client.connected())
-    {
-        client.print(*msg_json);
-        Serial.println("UDP send");
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("WiFi not connected, skip send");
+        return;
     }
+
+    int len = msg_json->length();
+    if (len == 0) {
+        Serial.println("Empty JSON, skip");
+        return;
+    }
+
+    // start packet to host:port
+    udp.beginPacket(host, port);
+    udp.print(*msg_json);
+    udp.endPacket();
+    //Serial.println(*msg_json);
 }
