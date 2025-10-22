@@ -17,9 +17,9 @@ For ESP32 UWB or ESP32 UWB Pro
 #define PIN_RST 27
 #define PIN_IRQ 34
 
-const char *ssid = "Galaxy A42 5G5F5E";
-const char *password = "07160716";
-const char *host = "10.238.7.37";
+const char *ssid = "Galaxy A42 5G5F5E"; // 需要改成自己的 WiFi 名稱
+const char *password = "07160716";      // 需要改成自己的 WiFi 密碼
+const char *host = "10.238.7.37";       // 需要改成自己的電腦 IP (cmd -> ipconfig)
 const int port = 8001;
 WiFiUDP udp;
 
