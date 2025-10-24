@@ -3,7 +3,7 @@
 - 安裝library，左邊輸入DW1000，下載第一個
 - 安裝USB驅動程式 -> https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers
 
-# 執行兩個UWB
+# 單點定位
 
 **1. 需要硬體**
 - 1個Tag (插在電腦USB上)
@@ -17,7 +17,7 @@
     * DW1000_2Ranging_TAG.ino
 - 右上角放大鏡點開，應該就可以看到數值了
 
-# 執行三個UWB
+# 雙點定位
 
 **1. 需要硬體**
 - 1個Tag (插在行動充電上)
@@ -32,3 +32,11 @@
     * DW1000_3Positioning_TAG.ino (有三個地方要自己改，有標住在程式裡)
     * UWB_Position_Display.py (有一個地方要自己改，有標住在程式裡)
 - 開啟 UWB_Position_Display.py 檔案，就可以看位置了
+
+# 三點定位
+
+*還沒試
+
+# 四點定位
+
+*還沒試
