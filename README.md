@@ -46,7 +46,7 @@
 **2. 執行**
 - 上方開發版選擇 ESP32 Dev Module
 - Tools -> 選擇Port -> (應該會是COM7,COM8,COM10,COM11，四個版子要不一樣)
-- Upload 三個版子
+- Upload 四個版子
     * DW1000_3Positioning_ANCHOR.ino
     * DW1000_3Positioning_ANCHOR2.ino
     * DW1000_3Positioning_ANCHOR3.ino
