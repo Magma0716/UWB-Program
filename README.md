@@ -34,7 +34,7 @@
 - 開啟 UWB_Position_Display.py 檔案，就可以看位置了
 
 **3. 有些參數可以調整**
-- distance_A1_A2 實際的Anchor距離 (需要自己拿捲尺量)
+- distance_A1_A2 實際的Anchor公尺距離 (需要自己拿捲尺量)
 - MeterToPixel Python畫面的放大程度
 
 # 三點定位
@@ -55,7 +55,7 @@
 - 開啟 UWB_Position_Display.py 檔案，就可以看位置了
 
 **3. 有些參數可以調整**
-- distance_A1_A2 實際的Anchor距離 (需要自己拿捲尺量)
+- distance_A1_A2 實際的Anchor公尺距離 (需要自己拿捲尺量)
 - MeterToPixel Python畫面的放大程度
 
 # 四點定位
