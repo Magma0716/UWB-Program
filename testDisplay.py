@@ -68,9 +68,6 @@ def fill_rect(x, y, w, h, color=("black", "black"), t=turtle):
     draw_rect(x, y, w, h, color, t)
     t.end_fill()
 
-def clean(t=turtle):
-    t.clear()
-
 # ==========================
 # Draw UI
 # ==========================
@@ -139,7 +136,7 @@ def main():
     
     while True:
 
-        data = '{"links":[{"A":"1785","R":"1.7"},{"A":"1786","R":"1.7"},{"A":"1787","R":"1.7"}]}'
+        data = '{"links":[{"A":"1785","R":"1.5"},{"A":"1786","R":"1.5"}]}'
         
         if data:
 
@@ -156,24 +153,29 @@ def main():
                 Aid = pos["A"]
                 Range = float(pos["R"])
                 if Aid == "1785":
-                    clean(t_a1)
+                    t_a1.clear()
                     draw_anchor(CENTER_X, CENTER_Y, "A1785(0, 0)", Range, t_a1)
+                    draw_cycle(CENTER_X, CENTER_Y, Range * MeterToPixel, "black", t_a1)
                     d1 = Range
                     Positioning += 1
                     
                 elif Aid == "1786":
-                    clean(t_a2)
+                    t_a2.clear()
                     draw_anchor(CENTER_X + MeterToPixel * distance_A1_A2, 
                                 CENTER_Y,
                                 f"A1786({distance_A1_A2}, 0)", Range, t_a2)
+                    draw_cycle(CENTER_X + MeterToPixel * distance_A1_A2, CENTER_Y, Range * MeterToPixel, "black", t_a2)
                     d2 = Range
                     Positioning += 1
                     
                 elif Aid == "1787":
-                    clean(t_a3)
+                    t_a3.clear()
                     draw_anchor(CENTER_X + MeterToPixel * distance_A1_A2 / 2, 
                                 CENTER_Y - MeterToPixel * (math.sqrt(3) / 2 * distance_A1_A2),
                                 f"A1787({distance_A1_A2/2:.2f}, {-distance_A1_A2*math.sqrt(3)/2:.2f})", Range, t_a3)
+                    draw_cycle(CENTER_X + MeterToPixel * distance_A1_A2 / 2, 
+                               CENTER_Y - MeterToPixel * (math.sqrt(3) / 2 * distance_A1_A2), 
+                               Range * MeterToPixel, "black", t_a3)
                     d3 = Range
                     Positioning += 1
             
@@ -190,7 +192,7 @@ def main():
                 turtle.update()
                 continue 
             
-            clean(t_tag)
+            t_tag.clear()
             draw_tag(x, y, "TAG", t_tag)
             # print(f"TAG Position: ({x:.1f}, {y:.1f})")
             

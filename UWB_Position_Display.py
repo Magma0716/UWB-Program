@@ -18,8 +18,8 @@ sock.settimeout(0.5)
 # ==========================
 # Coordination and Scale Setting
 # ==========================
-distance_A1_A2 = 3.0
-MeterToPixel = 100.0
+distance_A1_A2 = 2
+MeterToPixel = 200.0
 range_offset = 0.9
 
 CENTER_X = -250
@@ -81,7 +81,7 @@ def clean(t=turtle):
 # Draw UI
 # ==========================
 def draw_ui(t):
-    write_txt(-300, 350, "UWB Positon", "black",  t, f=('Arial', 32, 'normal'))
+    write_txt(-300, 350, "UWB Positioning", "black",  t, f=('Arial', 32, 'normal'))
     fill_rect(-400, 300, 800, 40, "black", t)
     write_txt(-50, 305, "WALL", "yellow",  t, f=('Arial', 24, 'normal'))
 
@@ -103,14 +103,14 @@ def draw_tag(x, y, txt, t):
 # Positioning Algorithm
 # ==========================
 def tag_pos1(a):
-    return 0, round(a, 1)
+    return 0, round(a, 2)
 
 def tag_pos2(a, b, c):
     cosA = (b**2 + c**2 - a**2) / (2 * b * c)
     x = b * cosA
     y = b * cmath.sqrt(1 - cosA**2)
     
-    return round(x.real, 1), round(y.real, 1)
+    return round(x.real, 2), round(y.real, 2)
 
 def tag_pos3(d1, d2, d3, x1, x2, x3, y1, y2, y3):
     a1 = 2 * (x1 - x2)
@@ -121,7 +121,7 @@ def tag_pos3(d1, d2, d3, x1, x2, x3, y1, y2, y3):
     c2 = d3**2 - d1**2 + x1**2 + y1**2 - x3**2 - y3**2
     x = (c1 * b2 - c2 * b1) / (a1 * b2 - a2 * b1)
     y = (a1 * c2 - a2 * c1) / (a1 * b2 - a2 * b1)
-    return round(x, 1), round(y, 1)
+    return round(x, 2), round(y, 2)
 
 # ==========================
 # Main Program
@@ -166,26 +166,33 @@ def main():
             # CENTER_Y = 150
             for pos in List:
                 Aid = pos["A"]
-                Range = float(pos["R"])
+                Range = max(0, (float(pos["R"])-0.78)*(5/6)) # 誤差
+                # Range = max((0.9972 * float(pos["R"]) * 1000 - 613.42) / 1000, 0) # 誤差
+                Range = round(Range,2)
                 if Aid == "1785":
-                    clean(t_a1)
+                    t_a1.clear()
                     draw_anchor(CENTER_X, CENTER_Y, "A1785(0, 0)", Range, t_a1)
+                    draw_cycle(CENTER_X, CENTER_Y, Range * MeterToPixel, "black", t_a1)
                     d1 = Range
                     Positioning += 1
                     
                 elif Aid == "1786":
-                    clean(t_a2)
+                    t_a2.clear()
                     draw_anchor(CENTER_X + MeterToPixel * distance_A1_A2, 
                                 CENTER_Y,
                                 f"A1786({distance_A1_A2}, 0)", Range, t_a2)
+                    draw_cycle(CENTER_X + MeterToPixel * distance_A1_A2, CENTER_Y, Range * MeterToPixel, "black", t_a2)
                     d2 = Range
                     Positioning += 1
                     
                 elif Aid == "1787":
-                    clean(t_a3)
+                    t_a3.clear()
                     draw_anchor(CENTER_X + MeterToPixel * distance_A1_A2 / 2, 
                                 CENTER_Y - MeterToPixel * (math.sqrt(3) / 2 * distance_A1_A2),
                                 f"A1787({distance_A1_A2/2:.2f}, {-distance_A1_A2*math.sqrt(3)/2:.2f})", Range, t_a3)
+                    draw_cycle(CENTER_X + MeterToPixel * distance_A1_A2 / 2, 
+                               CENTER_Y - MeterToPixel * (math.sqrt(3) / 2 * distance_A1_A2), 
+                               Range * MeterToPixel, "black", t_a3)
                     d3 = Range
                     Positioning += 1
             
@@ -204,7 +211,7 @@ def main():
             
             clean(t_tag)
             draw_tag(x, y, "TAG", t_tag)
-            print(f"TAG Position: ({x:.1f}, {y:.1f})")
+            print(f"TAG Position: ({x:.2f}, {y:.2f})")
             
         turtle.update()
         time.sleep(0.01)

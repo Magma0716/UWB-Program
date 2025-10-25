@@ -44,3 +44,7 @@ while True:
         json_data = json.loads(data.decode('utf-8').strip())
         print(f"Raw data from {json_data}")
 '''
+
+Range = 0
+Range = max((0.9972 * Range * 1000 - 613.42) / 1000, 0)  # 避免負距離
+print(round(Range,2))
