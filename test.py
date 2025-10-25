@@ -1,4 +1,3 @@
-
 # 測試用程式
 
 '''
@@ -44,7 +43,4 @@ while True:
     if data:
         json_data = json.loads(data.decode('utf-8').strip())
         print(f"Raw data from {json_data}")
-'''        
-    
-
-
+'''

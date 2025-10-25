@@ -7,13 +7,7 @@ import json
 # ==========================
 # UDP Setting
 # ==========================
-UDP_IP = "10.238.7.37" # 需要改成自己的電腦 IP (cmd -> ipconfig)
-UDP_PORT = 8001
-print(f"*** UDP listening on {UDP_IP}:{UDP_PORT} ***")
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind((UDP_IP, UDP_PORT))
-sock.settimeout(0.5)
 
 # ==========================
 # Coordination and Scale Setting
@@ -144,16 +138,10 @@ def main():
     draw_ui(t_ui)
     
     while True:
-        try:
-            # receive data through the UDP
-            data, address = sock.recvfrom(4096)
-        except socket.timeout:
-            data = None
 
-        #data = '{"links":[{"A":"1785","R":"1.5"},{"A":"1786","R":"1.5"},{"A":"1787","R":"1.5"}]}'
+        data = '{"links":[{"A":"1785","R":"1.7"},{"A":"1786","R":"1.7"},{"A":"1787","R":"1.7"}]}'
         
         if data:
-            print(f"Received message: {data} from {address}")
 
             try:
                 List = json.loads(data)["links"]
@@ -204,7 +192,7 @@ def main():
             
             clean(t_tag)
             draw_tag(x, y, "TAG", t_tag)
-            print(f"TAG Position: ({x:.1f}, {y:.1f})")
+            # print(f"TAG Position: ({x:.1f}, {y:.1f})")
             
         turtle.update()
         time.sleep(0.01)
