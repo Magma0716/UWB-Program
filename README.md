@@ -59,5 +59,6 @@ https://github.com/jremington/UWB-Indoor-Localization_Arduino
 
 # Python設定
 
-- 設定 distance_A1_A2 = 實際的Anchor公尺距離 (需要自己拿捲尺量)
-- 設定 MeterToPixel = Python畫面的放大程度 (像素)
+- 開啟 UWB_Position_Display.py
+  * 設定 distance_A1_A2 = 實際的Anchor公尺距離 (需要自己拿捲尺量)
+  * 設定 MeterToPixel = Python畫面的放大程度 (像素)
