@@ -6,6 +6,7 @@ For ESP32 UWB or ESP32 UWB Pro
 
 #include <SPI.h>
 #include "DW1000Ranging.h"
+#include "DW1000Time.h"
 
 #define ANCHOR_ADD "85:17:5B:D5:A9:9A:E2:9C"
 
@@ -53,12 +54,19 @@ void newRange()
 {
     Serial.print("from: ");
     Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
+
     Serial.print("\t Range: ");
     Serial.print(DW1000Ranging.getDistantDevice()->getRange());
     Serial.print(" m");
+
     Serial.print("\t RX power: ");
     Serial.print(DW1000Ranging.getDistantDevice()->getRXPower());
-    Serial.println(" dBm");
+    Serial.print(" dBm");
+
+    Serial.print("\t Treply: ");
+    float Treply = (DW1000Ranging.getDistantDevice()->timePollAckSent-DW1000Ranging.getDistantDevice()->timePollReceived).getAsMicroSeconds() * 1e-3;
+    Serial.print(Treply,5);
+    Serial.println(" ms");
 }
 
 void newBlink(DW1000Device *device)

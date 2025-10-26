@@ -45,6 +45,5 @@ while True:
         print(f"Raw data from {json_data}")
 '''
 
-Range = 0
-Range = max((0.9972 * Range * 1000 - 613.42) / 1000, 0)  # 避免負距離
-print(round(Range,2))
+print(948127404*0.000015650040064103*1e-3)
+print()

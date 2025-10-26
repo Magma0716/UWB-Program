@@ -7,7 +7,7 @@ import json
 # ==========================
 # UDP Setting
 # ==========================
-UDP_IP = "10.238.7.37" # 需要改成自己的電腦 IP (cmd -> ipconfig)
+UDP_IP = "10.245.122.37" # 需要改成自己的電腦 IP (cmd -> ipconfig)
 UDP_PORT = 8001
 print(f"*** UDP listening on {UDP_IP}:{UDP_PORT} ***")
 
@@ -19,7 +19,7 @@ sock.settimeout(0.5)
 # Coordination and Scale Setting
 # ==========================
 distance_A1_A2 = 2
-MeterToPixel = 200.0
+MeterToPixel = 100.0
 range_offset = 0.9
 
 CENTER_X = -250
@@ -106,6 +106,8 @@ def tag_pos1(a):
     return 0, round(a, 2)
 
 def tag_pos2(a, b, c):
+    if b == 0 or c == 0:
+        return 0, 0
     cosA = (b**2 + c**2 - a**2) / (2 * b * c)
     x = b * cosA
     y = b * cmath.sqrt(1 - cosA**2)
@@ -166,17 +168,19 @@ def main():
             # CENTER_Y = 150
             for pos in List:
                 Aid = pos["A"]
-                Range = max(0, (float(pos["R"])-0.78)*(5/6)) # 誤差
+                # Range = max(0.1, (float(pos["R"])-0.78)*(5/6)) # 誤差
                 # Range = max((0.9972 * float(pos["R"]) * 1000 - 613.42) / 1000, 0) # 誤差
+                # Range = float(pos["R"]) - range_offset
+                Range = float(pos["R"])
                 Range = round(Range,2)
-                if Aid == "1785":
+                if Aid == "81":
                     t_a1.clear()
                     draw_anchor(CENTER_X, CENTER_Y, "A1785(0, 0)", Range, t_a1)
                     draw_cycle(CENTER_X, CENTER_Y, Range * MeterToPixel, "black", t_a1)
                     d1 = Range
                     Positioning += 1
                     
-                elif Aid == "1786":
+                elif Aid == "82":
                     t_a2.clear()
                     draw_anchor(CENTER_X + MeterToPixel * distance_A1_A2, 
                                 CENTER_Y,
@@ -185,7 +189,7 @@ def main():
                     d2 = Range
                     Positioning += 1
                     
-                elif Aid == "1787":
+                elif Aid == "83":
                     t_a3.clear()
                     draw_anchor(CENTER_X + MeterToPixel * distance_A1_A2 / 2, 
                                 CENTER_Y - MeterToPixel * (math.sqrt(3) / 2 * distance_A1_A2),

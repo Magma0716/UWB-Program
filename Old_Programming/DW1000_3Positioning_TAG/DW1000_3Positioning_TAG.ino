@@ -19,7 +19,7 @@ For ESP32 UWB or ESP32 UWB Pro
 
 const char *ssid = "Galaxy A42 5G5F5E"; // 需要改成自己的 WiFi 名稱
 const char *password = "07160716";      // 需要改成自己的 WiFi 密碼
-const char *host = "10.238.7.37";       // 需要改成自己的電腦 IP (cmd -> ipconfig)
+const char *host = "10.245.122.37";       // 需要改成自己的電腦 IP (cmd -> ipconfig)
 const int port = 8001;
 WiFiUDP udp;
 
@@ -73,12 +73,15 @@ void newRange()
 {
     Serial.print("from: ");
     Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
+
     Serial.print("\t Range: ");
     Serial.print(DW1000Ranging.getDistantDevice()->getRange());
     Serial.print(" m");
+
     Serial.print("\t RX power: ");
     Serial.print(DW1000Ranging.getDistantDevice()->getRXPower());
     Serial.println(" dBm");
+
     fresh_link(uwb_data, DW1000Ranging.getDistantDevice()->getShortAddress(), DW1000Ranging.getDistantDevice()->getRange(), DW1000Ranging.getDistantDevice()->getRXPower());
 }
 
