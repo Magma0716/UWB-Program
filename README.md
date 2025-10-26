@@ -12,9 +12,7 @@ https://github.com/jremington/UWB-Indoor-Localization_Arduino
 - 安裝library，把DW1000這個資料夾，放入Arduino的函式庫裡 (預設：文件 -> Arduino -> libraries)
 - 安裝USB驅動程式 -> https://www.silabs.com/software-and-tools/usb-to-uart-bridge-vcp-drivers
 
-# 定位設定
-
-## Anchor設定
+# Anchor設定
 
 - 開啟 ESP32_anchor_autocalibrate.ino
    * 設定 Anchor1 = "81:00:22:EA:82:60:3B:9C"
@@ -47,7 +45,7 @@ https://github.com/jremington/UWB-Indoor-Localization_Arduino
 之後的 Anchor 就是重複上面的步驟
 ```
 
-## Tag設定
+# Tag設定
 
 - 開啟 ESP32_UWB_setup_tag.ino
    * 設定 ssid = 自己的 WiFi 名稱
@@ -58,7 +56,7 @@ https://github.com/jremington/UWB-Indoor-Localization_Arduino
 - Tools -> 選擇Port -> (應該會是COM7,COM8...)
 - Upload 程式
 
-## Python設定
+# Python設定
 
 - 設定 distance_A1_A2 = 實際的Anchor公尺距離 (需要自己拿捲尺量)
 - 設定 MeterToPixel = Python畫面的放大程度 (像素)
