@@ -26,8 +26,10 @@
  * - use enums instead of preprocessor constants
  */
 
+// ===== [Add] Header guard：避免此標頭檔被重複 #include，造成重複宣告/編譯錯誤 =====
 #ifndef _DW1000Ranging_H_INCLUDED
 #define _DW1000Ranging_H_INCLUDED
+// ========= [End Add] =========
 
 #include "DW1000.h"
 #include "DW1000Time.h"
@@ -45,8 +47,43 @@
 
 #define LEN_DATA 90
 
+// ===== [Add] Encryption definitions =====
+// IV 長度
+#ifndef ENC_IV_LEN
+#define ENC_IV_LEN 12
+#endif
+// Tag 長度
+#ifndef ENC_TAG_LEN
+#define ENC_TAG_LEN 16
+#endif
+// Encryption version
+#ifndef ENC_VER
+#define ENC_VER 0x01
+#endif
+// IV 產生模式
+#ifndef IV_MODE_COUNTER
+#define IV_MODE_COUNTER 0
+#endif
+// 唯一亂數 IV 模式
+#ifndef IV_MODE_RAND_UNIQUE
+#define IV_MODE_RAND_UNIQUE 1
+#endif
+
+// 唯一亂數 IV 的表容量（一次 session 內最多記錄幾個 IV）
+// 4096 筆約佔：4096*12 + 4096*1 ≈ 53KB（ESP32 通常 OK）
+// 太小會增加重複機率，太大會浪費 RAM
+#ifndef IV_UNIQ_TABLE_SIZE
+#define IV_UNIQ_TABLE_SIZE 4096
+#endif
+// ========= [End Add] =========
+
 //Max devices we put in the networkDevices array ! Each DW1000Device is 74 Bytes in SRAM memory for now.
+// ===== [Update] Increase MAX_DEVICES =====
+// 原版：MAX_DEVICES = 4
+// 意義：_networkDevices[] 可同時管理的裝置上限（TAG/ANCHOR 數量上限）
+// 調大可同時管理更多裝置，代價是 SRAM 增加
 #define MAX_DEVICES 7
+// ========= [End Update] =========
 
 //Default Pin for module:
 #define DEFAULT_RST_PIN 9
@@ -91,6 +128,20 @@ public:
 	static void setReplyTime(uint16_t replyDelayTimeUs);
 	static void setResetPeriod(uint32_t resetPeriod);
 	
+	// ===== [Add] Encryption functions ===== 
+	// (可以不呼叫設定函式，會使用預設值)
+	// 1. 加密開關 
+	void setEncryptionFlag(boolean enable);      // 預設 false
+	// 2. 負載：設定 Padding 長度
+	void setPaddingLength(uint8_t nBytes);       // 預設 0
+	// 3. 設定 IV 產生模式 (mode: IV_MODE_COUNTER / IV_MODE_RAND_UNIQUE)
+	void setIVMode(uint8_t mode);                // 預設 IV_MODE_COUNTER
+	// 3-1. 設定初始 IV 計數器值 (only for IV_MODE_COUNTER)
+	void setIVCounter(uint32_t start);           // 預設 0
+	// 4. 除錯模式開關 (logging：印出 key、IV、nonce 等資訊)
+	void setEncryptionDebugFlag(boolean enable); // 預設 false
+	// ========= [End Add] =========
+
 	//getters
 	static byte* getCurrentAddress() { return _currentAddress; };
 	
@@ -151,6 +202,21 @@ private:
 	static volatile boolean _receivedAck;
 	// protocol error state
 	static boolean          _protocolFailed;
+
+	// ===== [Add] Encryption state =====
+	// (可以不呼叫設定函式，會使用預設值)
+	// 1. 是否啟用加密
+	static boolean  _isEncryptionEnabled;        // 預設 false
+	// 2. 負載：Padding 長度
+	static uint8_t  _paddingLength;              // 預設 0
+	// 3. IV 產生模式 (mode: IV_MODE_COUNTER / IV_MODE_RAND_UNIQUE)
+	static uint8_t  _ivMode;                     // 預設 IV_MODE_COUNTER
+	// 3-1. 初始 IV 計數器值 (only for IV_MODE_COUNTER)
+	static uint32_t _expIVCounter;               // 預設 0
+	// 4. 除錯模式開關 (logging：印出 key、IV、nonce 等資訊)
+	static boolean  _isEncryptionDebugEnabled;   // 預設 false
+	// ========= [End Add] =========
+
 	// reset line to the chip
 	static uint8_t     _RST;
 	static uint8_t     _SS;
