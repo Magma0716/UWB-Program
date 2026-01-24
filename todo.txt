@@ -1,3 +1,5 @@
 2026-01-25 
+do: Draw_Error.py 已經可以畫,不過沒有讀serial的能力
+
 看要用校正的版本跑,還是學姊的anchor跟tag
 去跑加密後封包誤差python
