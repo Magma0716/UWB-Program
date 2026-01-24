@@ -1,5 +1,4 @@
-//anchor #4 setup
-
+//anchor #X setup
 
 // be sure to edit anchor_addr and select the previously calibrated anchor delay
 // my naming convention is anchors 1, 2, 3, ... have the lowest order byte of the MAC address set to 81, 82, 83, ...
@@ -9,10 +8,13 @@
 #include "DW1000.h"
 
 // leftmost two bytes below will become the "short address"
-char anchor_addr[] = "84:00:5B:D5:A9:9A:E2:9C"; //#4
+char anchor_addr[] = "81:00:5B:D5:A9:9A:E2:9C"; //#1
+//char anchor_addr[] = "82:00:5B:D5:A9:9A:E2:9C"; //#2
+//char anchor_addr[] = "83:00:5B:D5:A9:9A:E2:9C"; //#3
+//char anchor_addr[] = "84:00:5B:D5:A9:9A:E2:9C"; //#4
 
 //calibrated Antenna Delay setting for this anchor
-uint16_t Adelay = 16595;
+uint16_t Adelay = 16541;
 
 // previously determined calibration results for antenna delay
 // #1 16609
@@ -43,6 +45,21 @@ void setup()
   Serial.print("Calibration distance ");
   Serial.println(dist_m);
 
+  // ----- Encryption:True ----- 
+  /*
+  DW1000Ranging.setEncryptionFlag(true);
+  DW1000Ranging.setEncryptionDebugFlag(true);
+  DW1000Ranging.setIVCounter(0);
+  DW1000Ranging.setIVMode(IV_MODE_RAND_UNIQUE); // IV
+  DW1000Ranging.setPaddingLength(16); // Padding
+  */
+
+  // ----- Encryption:False ----- 
+  /*
+  DW1000Ranging.setEncryptionFlag(false);
+  DW1000Ranging.setEncryptionDebugFlag(false);
+  */
+
   //init the configuration
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
@@ -51,7 +68,8 @@ void setup()
   DW1000.setAntennaDelay(Adelay);
 
   DW1000Ranging.attachNewRange(newRange);
-  DW1000Ranging.attachNewDevice(newDevice);
+  DW1000Ranging.attachBlinkDevice(newBlink);
+  //DW1000Ranging.attachNewDevice(newDevice);
   DW1000Ranging.attachInactiveDevice(inactiveDevice);
 
   //start the module as an anchor, do not assign random short address

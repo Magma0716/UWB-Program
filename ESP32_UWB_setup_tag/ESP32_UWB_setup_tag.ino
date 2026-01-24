@@ -24,9 +24,15 @@ const uint8_t PIN_SS = 4;   // spi select pin
 char tag_addr[] = "7D:00:22:EA:82:60:3B:9C";
 
 // WiFi Setting
-const char *ssid = "Galaxy A42 5G5F5E"; // 需要改成自己的 WiFi 名稱
-const char *password = "07160716";      // 需要改成自己的 WiFi 密碼
-const char *host = "10.245.122.37";     // 需要改成自己的電腦 IP (cmd -> ipconfig)
+/*
+const char *ssid     = "Alan6711";
+const char *password = "bbb520111";
+const char *host     = "192.168.0.108";
+*/
+const char *ssid = "PSS";
+const char *password = "047611137";
+const char *host = "192.168.2.109";
+
 const int port = 8001;
 WiFiUDP udp;
 
@@ -52,6 +58,9 @@ void setup()
   Serial.println(WiFi.localIP());
   
   delay(1000);
+
+  // 除錯模式 (印出 KEY / IV / TAG / CT 等資訊)
+  DW1000Ranging.setEncryptionDebugFlag(true);
 
   //init the configuration
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
