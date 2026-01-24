@@ -5,6 +5,10 @@ https://github.com/Makerfabs/Makerfabs-ESP32-UWB
 
 2025-10-27 -> v2.0 使用 Jim Remington 的量測程式去改編 (比v1.0計算更精準)
 https://github.com/jremington/UWB-Indoor-Localization_Arduino
+
+2026-01-05 ->
+YP資料夾 為 加密無校正
+目前資料夾 為 加密有校正 
 ```
 
 # 需要安裝的
