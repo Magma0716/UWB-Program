@@ -79,8 +79,8 @@ void loop()
 
 void newRange()
 {
-    // 輸出: from: {短地址}	 Range: {距離} m	 RX power: {接收功率} dBm
-    // 例如: from: A1B2	 Range: 3.01 m	 RX power: -45.00 dBm
+    // 輸出: from: {短地址}	 Range: {距離} m  RX power: {接收功率} dBm
+    // 例如: from: A1B2	    Range: 3.01 m	 RX power: -45.00 dBm
     Serial.print("from: ");
     Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
     Serial.print("\t Range: ");

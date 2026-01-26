@@ -87,13 +87,26 @@ void loop()
     }
 }
 
+unsigned long lastTime = 0;
+
 void newRange()
 {
-  Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
-  Serial.print(",");
-  Serial.println(DW1000Ranging.getDistantDevice()->getRange());
+  // calculate time difference
+  unsigned long nowTime = millis();
+  unsigned long timeDiff = 0;
+  if(lastTime != 0) timeDiff = nowTime - lastTime;
+  lastTime = now;
 
-  fresh_link(uwb_data, DW1000Ranging.getDistantDevice()->getShortAddress(), DW1000Ranging.getDistantDevice()->getRange(), DW1000Ranging.getDistantDevice()->getRXPower());
+  // variable
+  auto ShortAddress = DW1000Ranging.getDistantDevice()->getShortAddress();
+  auto Range = DW1000Ranging.getDistantDevice()->getRange();
+  auto RXPower = DW1000Ranging.getDistantDevice()->getRXPower();
+
+  Serial.print(ShortAddress, HEX);
+  Serial.print(",");
+  Serial.println(Range);
+
+  fresh_link(uwb_data, ShortAddress, Range, RXPower);
 }
 
 void newDevice(DW1000Device *device)

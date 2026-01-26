@@ -14,6 +14,7 @@ def cut(start_lua, length):
     py_start = start_lua - 1
     return py_start, length
 
+
 # Packet structure
 def get_packet_structure(b):
     if not b:
@@ -108,7 +109,7 @@ def get_packet_structure(b):
 
         # ---------- Range_Report ----------
         
-        # 未加密 (need to test)
+        # 未加密
         if func == 0x03 and encryption == 0x00:
             struct += [
                 ("Mac\nHeader",         2, "#FEFDE8"),

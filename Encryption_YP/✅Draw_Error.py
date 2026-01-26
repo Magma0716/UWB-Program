@@ -1,5 +1,7 @@
 import pandas as pd
+import serial
 import matplotlib.pyplot as plt
+import time
 
 '''
 seq: rounded delay
@@ -8,8 +10,42 @@ interval_ms: raw delay
 pad_inferred_from_data: padding
 '''
 
+# connect
+PORT = 'COM3'
+BAUD_RATE = 115200
+DATA_LIMIT = 200
+
+data = []
+
+ser = serial.Serial(PORT, BAUD_RATE, timeout=1)
+print('connect to uwb...')
+time.sleep(2)
+
+print('start receive date...')
+
+while len(data) < DATA_LIMIT:
+    if ser.in_waiting > 0:
+        line = ser.readline().decode('utf-8').strip()
+        
+        if line:
+            arr = line.split(',')
+            print(arr)
+            if len(arr) == 4:
+                try:
+                    data.append({
+                        'seq': int(arr[0]),
+                        'distance_m': float(arr[1]),
+                        'interval_ms': float(arr[2]),
+                        'pad_inferred': int(arr[3])
+                    })
+                except:
+                    continue
+ser.close()
+print('receive finish!!')
+    
 # read data
-df = pd.read_csv(r'.\Encryption_YP\UWB_Reports\範例_UWB_Result_ENC_ON_IV_UNK_PAD0_20260115-213740.csv')
+#df = pd.read_csv(r'.\Encryption_YP\UWB_Reports\範例_UWB_Result_ENC_ON_IV_UNK_PAD0_20260115-213740.csv')
+df = pd.DataFrame(data)
 
 # pre-data
 dist = df['distance_m']
