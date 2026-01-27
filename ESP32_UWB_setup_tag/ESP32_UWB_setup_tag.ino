@@ -60,7 +60,7 @@ void setup()
   delay(1000);
 
   // 除錯模式 (印出 KEY / IV / TAG / CT 等資訊)
-  DW1000Ranging.setEncryptionDebugFlag(true);
+  DW1000Ranging.setEncryptionDebugFlag(false);
 
   //init the configuration
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
@@ -79,7 +79,7 @@ void setup()
 void loop()
 {
   DW1000Ranging.loop();
-  if ((millis() - runtime) > 1000)
+  if ((millis() - runtime) > 100)
     {
         make_link_json(uwb_data, &all_json);
         send_udp(&all_json);
@@ -102,9 +102,13 @@ void newRange()
   auto Range = DW1000Ranging.getDistantDevice()->getRange();
   auto RXPower = DW1000Ranging.getDistantDevice()->getRXPower();
 
-  Serial.print(ShortAddress, HEX);
+  Serial.print(timeDiff);
   Serial.print(",");
-  Serial.println(Range);
+  Serial.print(Range);
+  Serial.print(",");
+  Serial.print(timeDiff,6);
+  Serial.print(",");
+  Serial.println(0);
 
   fresh_link(uwb_data, ShortAddress, Range, RXPower);
 }
