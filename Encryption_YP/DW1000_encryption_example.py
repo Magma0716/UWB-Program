@@ -62,7 +62,7 @@ COM_PORT = "/dev/cu.usbserial-02E2277A"
 BAUD_RATE = 115200
 MAX_SAMPLES = 200
 
-OUTPUT_DIR = Path(__file__).resolve().parent / "uwb_reports"
+OUTPUT_DIR = Path(__file__).resolve().parent / "UWB_Reports"
 SAVE_PNG = True
 SAVE_CSV = True
 

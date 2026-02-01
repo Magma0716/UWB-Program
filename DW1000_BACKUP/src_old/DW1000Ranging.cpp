@@ -30,7 +30,6 @@
 #include "DW1000Ranging.h"
 #include "DW1000Device.h"
 
-<<<<<<< HEAD
 // # ====== 新增 (Add) ======
 // 初始化實驗變數 (預設全關，保持原始 Library 行為)
 boolean  DW1000RangingClass::_isEncryptionEnabled = false; 
@@ -69,112 +68,6 @@ void printHex(const char* label, const unsigned char* data, int len) {
     Serial.println();
 }
 // # ========================
-=======
-// ===== [Add] Encryption includes =====
-// ESP32 才有用到 mbedTLS AES-GCM；非 ESP32 直接略過以保持可編譯
-#if defined(ARDUINO_ARCH_ESP32)
-#include "mbedtls/gcm.h"     // AES-GCM      
-#include "mbedtls/cipher.h"  // cipher helper
-#endif
-
-// 32 bytes = 256-bit AES key（示範用 key，可自行更換）
-// static：只在本 .cpp 可見，避免 multiple definition
-static const uint8_t UWB_AES_KEY[32] = {
-  0x00,0x01,0x02,0x03, 0x04,0x05,0x06,0x07,
-  0x08,0x09,0x0A,0x0B, 0x0C,0x0D,0x0E,0x0F,
-  0x10,0x11,0x12,0x13, 0x14,0x15,0x16,0x17,
-  0x18,0x19,0x1A,0x1B, 0x1C,0x1D,0x1E,0x1F
-};
-
-// 除錯工具：印出 bytes 的 HEX（用於檢查 key/IV/nonce/tag/密文）
-static bool _encDbgKeyPrinted = false;
-static void dumpHex(const char* label, const uint8_t* p, size_t n) {
-  Serial.print(label);
-  for (size_t i = 0; i < n; i++) {
-    if (p[i] < 16) Serial.print("0");
-    Serial.print(p[i], HEX);
-    if (i + 1 < n) Serial.print(" ");
-  }
-  Serial.println();
-}
-// ========= [End Add] =========
-
-
-// ===== [Add] Unique-random IV tracker (ESP32 only) =====
-// AES-GCM 要求：同一把 key 下 IV(Nonce) 不可重複
-// 功能：IV_MODE_RAND_UNIQUE 產生 12-byte 隨機 IV，並用表格查重（僅保證「本次開機/session」）
-#if defined(ARDUINO_ARCH_ESP32)
-#include "esp_system.h" // for esp_random()
-
-// RAM 注意：IV_UNIQ_TABLE_SIZE=4096 時約 52KB（iv + flag）
-static uint8_t  _iv_used[IV_UNIQ_TABLE_SIZE][ENC_IV_LEN];
-static uint8_t  _iv_used_flag[IV_UNIQ_TABLE_SIZE];
-static uint32_t _iv_used_count = 0;
-
-// FNV-1a：用於把 IV 映射到 table index（用途是查重，不是保密）
-static inline uint32_t fnv1a32_iv(const uint8_t* iv, size_t n) {
-  uint32_t h = 2166136261u;
-  for (size_t i = 0; i < n; i++) {
-    h ^= (uint32_t)iv[i];
-    h *= 16777619u;
-  }
-  return h;
-}
-
-// 清空表：重新開始一輪量測/模式切換時可呼叫
-static void iv_table_clear() {
-  memset(_iv_used_flag, 0, sizeof(_iv_used_flag));
-  _iv_used_count = 0;
-}
-
-// true=新 IV 已登記；false=重複或表滿（表滿後無法再保證不重複）
-static bool iv_table_insert_if_new(const uint8_t iv[ENC_IV_LEN]) {
-  if (_iv_used_count >= IV_UNIQ_TABLE_SIZE) {
-    return false; // 表滿：沒辦法再保證「全程不重複」
-  }
-
-  uint32_t h = fnv1a32_iv(iv, ENC_IV_LEN);
-  uint32_t idx = h % IV_UNIQ_TABLE_SIZE;
-
-  for (uint32_t step = 0; step < IV_UNIQ_TABLE_SIZE; step++) {
-    uint32_t j = (idx + step) % IV_UNIQ_TABLE_SIZE;
-
-    if (_iv_used_flag[j] == 0) {
-      memcpy(_iv_used[j], iv, ENC_IV_LEN);
-      _iv_used_flag[j] = 1;
-      _iv_used_count++;
-      return true;
-    }
-
-    // 位置已用：比對是否同一個 IV（真的檢查 12 bytes）
-    if (memcmp(_iv_used[j], iv, ENC_IV_LEN) == 0) {
-      return false; // 重複了
-    }
-  }
-
-  return false; // 理論上不該走到這（表滿/探測完）
-}
-
-// 生成唯一亂數 IV：成功回 true；失敗回 false（極端：表滿或碰撞過多）
-static bool gen_unique_random_iv(uint8_t outIV[ENC_IV_LEN]) {
-  // 最多嘗試 100,000 次（理論上不該超過幾十次就成功）
-  for (int tries = 0; tries < 100000; tries++) {
-    uint32_t r0 = esp_random();
-    uint32_t r1 = esp_random();
-    uint32_t r2 = esp_random();
-    memcpy(outIV + 0, &r0, 4);
-    memcpy(outIV + 4, &r1, 4);
-    memcpy(outIV + 8, &r2, 4);
-
-    if (iv_table_insert_if_new(outIV)) {
-      return true;
-    }
-  }
-  return false; 
-}
-#endif
-// ========= [End Add] =========
->>>>>>> d817fcb890058d06552972a889960e7de5a3cbd8
 
 DW1000RangingClass DW1000Ranging;
 
@@ -681,7 +574,6 @@ void DW1000RangingClass::loop() {
 		// get message and parse
 		DW1000.getData(data, LEN_DATA); // 把 DW1000 RX buffer 讀到 data[]（注意：LEN_DATA 是上限）
 		
-<<<<<<< HEAD
 		int messageType = detectMessageType(data);
 		if (_type == ANCHOR && (messageType == POLL || messageType == RANGE)) {
     		uint16_t rxLen = DW1000.getDataLength();
@@ -692,11 +584,6 @@ void DW1000RangingClass::loop() {
 	}	
 
 		//we have just received a BLINK message from tag
-=======
-		int messageType = detectMessageType(data); // 解析 msgid
-		
-		// (B1) ANCHOR 收到 BLINK：TAG 在找 anchor
->>>>>>> d817fcb890058d06552972a889960e7de5a3cbd8
 		if(messageType == BLINK && _type == ANCHOR) {
 			byte address[8];
 			byte shortAddress[2];
@@ -885,17 +772,9 @@ void DW1000RangingClass::loop() {
 					}
 				}
 
-<<<<<<< HEAD
 				/* # ====== 原本的邏輯 (Original) ======
                 // 原始版本直接從封包固定位置讀取 float
 
-=======
-				// ===== [Delete] Original RANGE_REPORT (plaintext floats) =====
-				// 原版 payload 格式（固定 8 bytes）：
-				//   - curRange   : float @ data + (1 + SHORT_MAC_LEN)
-				//   - curRXPower : float @ data + (5 + SHORT_MAC_LEN)
-				/*
->>>>>>> d817fcb890058d06552972a889960e7de5a3cbd8
 				else if(messageType == RANGE_REPORT) {
 
 					float curRange;
@@ -923,7 +802,6 @@ void DW1000RangingClass::loop() {
 					}
 				}
 				*/
-<<<<<<< HEAD
 
 				// # ====== 改動 (Modify) ======
                 // 說明：替換為 AES-GCM 解密與驗證流程
@@ -1015,142 +893,6 @@ void DW1000RangingClass::loop() {
 					// ================= [解密修改結束] =================
 				}
 							
-=======
-				// ========= [End Delete] =========
-
-
-				// ===== [Add] New RANGE_REPORT (ver+plen+payload, supports plaintext or AES-GCM) =====
-				// 新版 payload 格式（自描述）：
-				//   [ver:1][plen:1][payload:plen]
-				//   - ver==0x00   ：明文（payload 是 ASCII 距離字串，可能含 padding '0'）
-				//   - ver==ENC_VER：加密（payload = IV + TAG + CT；解密後得到 ASCII 距離字串）
-				else if(messageType == RANGE_REPORT) {
-
-					const int payloadStart = SHORT_MAC_LEN + 1;  // [ver] 的位置（msgid 後面第一個 byte）
-					const uint8_t ver  = data[payloadStart];     // 版本/格式：0x00 明文、ENC_VER 加密
-					const uint8_t plen = data[payloadStart + 1]; // payload 長度
-					const int p0 = payloadStart + 2;             // payload 起點
-
-					// 邊界檢查：用「實際收到的長度」rxLen 當上限（避免讀到殘留 data）
-					uint16_t rxLen = DW1000.getDataLength();
-					if (rxLen > LEN_DATA) rxLen = LEN_DATA;
-					if (p0 + (int)plen > (int)rxLen) {
-						return; // 格式不合理：直接丟掉
-					}
-
-					float curRange = 0.0f;
-					float curRXPower = DW1000.getReceivePower(); // RXPower 改由「此刻接收」直接量測
-					bool ok = false;                             // 是否成功解析/解密距離
-
-					if (ver == 0x00) {
-						// 明文：payload 直接是 ASCII 距離字串（可能含 padding '0'）
-						char buf[128];
-						int n = (int)plen;
-						if (n > 127) n = 127;            // 防止 buf overflow
-						memcpy(buf, &data[p0], (size_t)n);
-						buf[n] = '\0';
-						curRange = (float)atof(buf);     // ASCII -> float
-						ok = true;
-
-					} 
-					else if (ver == ENC_VER) {
-
-						#if defined(ARDUINO_ARCH_ESP32)
-						// 加密：payload = IV(12) + TAG(16) + CT(ctLen)
-						if (plen < (ENC_IV_LEN + ENC_TAG_LEN + 1)) {
-							return; // 至少要有 1 byte CT
-						}
-						const int ivOff  = p0;                            // IV 起點
-						const int tagOff = p0 + ENC_IV_LEN;               // TAG 起點
-						const int ctOff  = p0 + ENC_IV_LEN + ENC_TAG_LEN; // CT 起點
-
-						int ctLen = (int)plen - (ENC_IV_LEN + ENC_TAG_LEN);
-						if (ctLen < 1) return;
-
-						// decrypted 緩衝 128 bytes：超過就拒收（避免硬截短造成資料不一致）
-						if (ctLen > 127) {
-							if (_isEncryptionDebugEnabled) {
-							Serial.print("[ENC][RX][DROP] ctLen too large = ");
-							Serial.println(ctLen);
-							}
-							return;
-						}
-
-						unsigned char decrypted[128];
-						memset(decrypted, 0, sizeof(decrypted));
-
-						// AES-GCM 驗證 + 解密（auth_decrypt：TAG 不對就會 fail）
-						mbedtls_gcm_context gcm;
-						mbedtls_gcm_init(&gcm);
-						mbedtls_gcm_setkey(&gcm, MBEDTLS_CIPHER_ID_AES, UWB_AES_KEY, 256);
-
-						if (_isEncryptionDebugEnabled) {
-							dumpHex("[ENC][RX] IV  = ", (const uint8_t*)(&data[ivOff]), ENC_IV_LEN);
-							dumpHex("[ENC][RX] TAG = ", (const uint8_t*)(&data[tagOff]), ENC_TAG_LEN);
-							dumpHex("[ENC][RX] CT  = ", (const uint8_t*)(&data[ctOff]), (size_t)ctLen);
-						}
-
-						int ret = mbedtls_gcm_auth_decrypt(
-							&gcm,
-							(size_t)ctLen,
-							(const unsigned char*)(&data[ivOff]), ENC_IV_LEN,
-							NULL, 0, // AAD（目前未使用）
-							(const unsigned char*)(&data[tagOff]), ENC_TAG_LEN,
-							(const unsigned char*)(&data[ctOff]),
-							decrypted
-						);
-						mbedtls_gcm_free(&gcm);
-
-						if (ret == 0) {
-							// 解密成功：decrypted 是 ASCII 距離字串
-							decrypted[ctLen] = '\0';
-							if (_isEncryptionDebugEnabled) {
-								Serial.print("[ENC][RX] PLAIN(str) = ");
-								Serial.println((char*)decrypted);
-							}
-							curRange = (float)atof((char*)decrypted);
-							ok = true;
-						} else {
-							// 解密失敗：可能 IV/TAG/KEY 不一致或封包被破壞
-								if (_isEncryptionDebugEnabled) {
-								Serial.print("[ENC][RX][ERR] auth_decrypt ret=");
-								Serial.println(ret);
-							}
-							ok = false;
-						}
-
-						#else
-						ok = false; // 非 ESP32：不支援 mbedtls-gcm，直接不解密
-						#endif
-					} 
-					else {
-						ok = false; // 未知 ver：直接視為不支援
-					}
-
-					if (!ok) {
-						return;
-					}
-
-					// range filter：與原版一致（略過第一筆）
-					if (_useRangeFilter) {
-						if (myDistantDevice->getRange() != 0.0f) {
-						curRange = filterValue(curRange, myDistantDevice->getRange(), _rangeFilterValue);
-						}
-					}
-
-					// 更新此 device 的距離與 RXPower（交給上層 callback 使用）
-					myDistantDevice->setRange(curRange);
-					myDistantDevice->setRXPower(curRXPower);
-
-					_lastDistantDevice = myDistantDevice->getIndex();
-					if(_handleNewRange != 0) {
-						(*_handleNewRange)(); // callback：通知上層「有新距離」
-					}
-				}
-				// ========= [End Add] =========
-
-
->>>>>>> d817fcb890058d06552972a889960e7de5a3cbd8
 				else if(messageType == RANGE_FAILED) {
 					//not needed as we have a timer;
 					return;
@@ -1409,7 +1151,6 @@ void DW1000RangingClass::transmitRangeReport(DW1000Device* myDistantDevice) {
     
     // 1. 產生標準 MAC 表頭 (維持原本邏輯)
     _globalMac.generateShortMACFrame(data, _currentShortAddress, myDistantDevice->getByteShortAddress());
-<<<<<<< HEAD
     data[SHORT_MAC_LEN] = RANGE_REPORT; // 設定功能碼
     
     // --------------- [加密修改開始] ---------------
@@ -1419,68 +1160,9 @@ void DW1000RangingClass::transmitRangeReport(DW1000Device* myDistantDevice) {
     int baseLen = snprintf(plainBuf, sizeof(plainBuf), "%.2f", dist); // 保留2位小數
 
 	int offset = SHORT_MAC_LEN + 1; //10
-=======
-    data[SHORT_MAC_LEN] = RANGE_REPORT;  // msgid
-
-
-	// ===== [Delete] Original RANGE_REPORT payload (2 floats, fixed 8 bytes) =====
-	// 原版封包格式（固定長度）：
-	//   [Short MAC][msgid=RANGE_REPORT][curRange(float)][curRXPower(float)]
-	/*
-	// write final ranging result
-	float curRange   = myDistantDevice->getRange();
-	float curRXPower = myDistantDevice->getRXPower();
-	//We add the Range and then the RXPower
-	memcpy(data+1+SHORT_MAC_LEN, &curRange, 4);
-	memcpy(data+5+SHORT_MAC_LEN, &curRXPower, 4);
-	copyShortAddress(_lastSentToShortAddress, myDistantDevice->getByteShortAddress());
-	transmit(data, DW1000Time(_replyDelayTimeUS, DW1000Time::MICROSECONDS));
-}
-	*/
-	// ========= [End Delete] =========
-
-
-	// ===== [Add] New RANGE_REPORT payload (ver+plen+payload, supports plaintext or AES-GCM) =====
-	// 新版先把距離做成字串（ASCII），再視需要：
-	//   - 明文：直接塞 payload
-	//   - 加密：AES-GCM 加密後塞 payload（IV+TAG+CT）
-    float dist = myDistantDevice->getRange();         // 讀出本次量測距離（meters）
-    char plainBuf[128];                               // 明文緩衝：存 ASCII 距離字串（含 padding）
-
-	// 固定 4 位小數
-    int baseLen = snprintf(plainBuf, sizeof(plainBuf), "%.4f", dist);             // 例："2.0310"
-    if (baseLen < 0) baseLen = 0;                                                 // snprintf 失敗保底
-    if (baseLen > (int)sizeof(plainBuf) - 1) baseLen = (int)sizeof(plainBuf) - 1; // 避免越界
-
-	// padding：在距離字串後面補 '0'（ASCII）以增加負載
-    int pad = (int)_paddingLength;                    // 使用者設定的 padding bytes（0 表示不補）
-    if (pad < 0) pad = 0;                             // uint8_t 理論上不會 <0，這行是防呆
-
-    int canAppend = (int)sizeof(plainBuf) - 1 - baseLen; // plainBuf 還能塞多少（留 '\0'）
-    if (pad > canAppend) pad = canAppend;                // padding 太大就截到 buffer 能容納的上限
-
-    memset(plainBuf + baseLen, '0', (size_t)pad);     // 直接補 ASCII '0'（不是 0x00）
-
-    int plainLen = baseLen + pad;                     // 明文實際長度（不含 '\0'）
-    plainBuf[plainLen] = '\0';                        // 方便 debug 印字串；加密仍用 plainLen
-
-    int idx = SHORT_MAC_LEN + 1;                      // idx 指向 msgid 後面的第一個位置（payload 區起點）
-
-    const int verPos  = idx++;                        // ver 欄位位置（1 byte）
-    const int plenPos = idx++;                        // payload_len 欄位位置（1 byte）
-
-    data[verPos]  = (_isEncryptionEnabled ? ENC_VER : 0x00); // ver=ENC_VER 表示 AES-GCM；0x00 表示明文
-    data[plenPos] = 0;                                       // 先填 0，後面組好 payload 才回填真正長度
-
-	// msgid 佔 1 byte、ver 佔 1、plen 佔 1
-    const int headerBytes = (SHORT_MAC_LEN + 1) + 1 + 1; // short-mac + msgid + ver + plen
-    int maxPayload = (int)LEN_DATA - headerBytes;        // payload 允許最大長度（避免超過 data[]）
-    if (maxPayload < 0) maxPayload = 0;
->>>>>>> d817fcb890058d06552972a889960e7de5a3cbd8
 
     // 判斷是否啟用加密
     if (_isEncryptionEnabled) {
-<<<<<<< HEAD
         // --- 模式 A: 加密開啟 (AES-GCM + IV Counter) ---
         
         // 1) 處理 Padding (實驗要求)
@@ -1551,154 +1233,6 @@ void DW1000RangingClass::transmitRangeReport(DW1000Device* myDistantDevice) {
     DW1000.setDelay(DW1000Time(_replyDelayTimeUS, DW1000Time::MICROSECONDS));
     DW1000.startTransmit();
     // ======================== [加密修改結束] ========================
-=======
-		
-		#if defined(ARDUINO_ARCH_ESP32)
-
-		// payload = IV(12) + TAG(16) + CIPHERTEXT(plainLen)
-		int maxPlain = maxPayload - (ENC_IV_LEN + ENC_TAG_LEN); // 留出 IV+TAG 後，明文最多可加密多少
-		if (maxPlain < 0) maxPlain = 0;
-
-		if (plainLen > maxPlain) {                       // 若明文太長，截短以免塞不下
-		plainLen = maxPlain;
-		plainBuf[plainLen] = '\0';                       // 只是為了 debug 可讀
-		}
-
-		uint8_t iv[ENC_IV_LEN];
-		memset(iv, 0, sizeof(iv));                      // IV(Nonce) 緩衝（12 bytes）
-
-		uint32_t usedCtr = 0xFFFFFFFF;                  // debug 用：counter 模式下印出用到的 counter
-		bool ivOk = true;                               // 生成 IV 是否成功（RAND_UNIQUE 可能失敗）
-
-		if (_ivMode == IV_MODE_COUNTER) {
-			// COUNTER：前 4 bytes 放 counter，其餘 0（同 key 下 counter 必須單調不重複）
-			usedCtr = _expIVCounter;
-			memset(iv, 0, sizeof(iv));
-			memcpy(iv, &_expIVCounter, sizeof(uint32_t)); // IV[0..3] = counter
-			_expIVCounter++;                              // 下一包用下一個 counter
-
-		} else if (_ivMode == IV_MODE_RAND_UNIQUE) {
-			#if defined(ARDUINO_ARCH_ESP32)
-			// RAND_UNIQUE：用 RNG 產 12 bytes，並用 table 檢查「本次開機期間不重複」
-			ivOk = gen_unique_random_iv(iv);
-
-			if (!ivOk) {
-				// 為了實驗公平：失敗就丟包，不 fallback 成 counter（避免混到另一種模式）
-				if (_isEncryptionDebugEnabled) {
-					Serial.println("[ENC][TX][DROP] Unique random IV failed (table full or RNG issue).");
-				}
-				return;  // 直接停止：這次 RANGE_REPORT 不送
-			}
-			#else
-			// 非 ESP32 沒有 esp_random：直接判定失敗
-			ivOk = false;
-			if (_isEncryptionDebugEnabled) {
-				Serial.println("[ENC][TX][DROP] RAND_UNIQUE not supported on non-ESP32.");
-			}
-			return;
-			#endif
-
-		} else {
-			// 不認得的模式：保守用 COUNTER（避免 iv 未初始化造成重複）
-			usedCtr = _expIVCounter;
-			memset(iv, 0, sizeof(iv));
-			memcpy(iv, &_expIVCounter, sizeof(uint32_t));
-			_expIVCounter++;
-		}
-
-		uint8_t tag[ENC_TAG_LEN];                        // AES-GCM authentication tag（16 bytes）
-		uint8_t cipher[128];                             // 密文緩衝（大小需 >= plainLen）
-		if (plainLen > (int)sizeof(cipher)) {            // 防呆：加密輸出 buffer 不夠就再截短
-			plainLen = (int)sizeof(cipher);
-			plainBuf[plainLen] = '\0';
-		}
-
-		// AES-GCM 加密：plainBuf -> cipher，同時輸出 tag
-		mbedtls_gcm_context gcm;
-		mbedtls_gcm_init(&gcm);
-		mbedtls_gcm_setkey(&gcm, MBEDTLS_CIPHER_ID_AES, UWB_AES_KEY, 256);
-
-		int ret = mbedtls_gcm_crypt_and_tag(
-			&gcm, MBEDTLS_GCM_ENCRYPT,
-			(size_t)plainLen,
-			iv, ENC_IV_LEN,                               // nonce/IV（12 bytes）
-			NULL, 0,                                      // AAD：目前未使用
-			(const unsigned char*)plainBuf,               // input plaintext
-			cipher,                                       // output ciphertext
-			ENC_TAG_LEN, tag                              // output tag
-		);
-		mbedtls_gcm_free(&gcm);
-
-		if (ret != 0) {
-			// 加密失敗：退回明文（避免整個 ranging 因加密掛掉）
-			data[verPos] = 0x00;                          // 改成明文版本
-
-			int copyLen = plainLen;
-			if (copyLen > maxPayload) copyLen = maxPayload;  // payload 上限保護
-
-			memcpy(&data[idx], plainBuf, (size_t)copyLen);   // payload = plain bytes
-			idx += copyLen;
-			data[plenPos] = (uint8_t)copyLen;                // 回填 payload_len
-		} else {
-			// 加密成功：payload = IV + TAG + CIPHERTEXT
-			memcpy(&data[idx], iv, ENC_IV_LEN);   idx += ENC_IV_LEN;
-			memcpy(&data[idx], tag, ENC_TAG_LEN); idx += ENC_TAG_LEN;
-			memcpy(&data[idx], cipher, (size_t)plainLen); idx += plainLen;
-
-			data[plenPos] = (uint8_t)(ENC_IV_LEN + ENC_TAG_LEN + plainLen); // 回填 payload_len
-
-			// debug：印出 key/IV/plain/tag/cipher（用於驗證格式與解密一致）
-			if (_isEncryptionDebugEnabled) {
-				if (!_encDbgKeyPrinted) {
-					dumpHex("[ENC][TX] KEY = ", UWB_AES_KEY, 32); // key 只印一次，避免洗版
-					_encDbgKeyPrinted = true;
-				}
-
-				Serial.print("[ENC][TX] ivMode = ");
-				Serial.println((_ivMode == IV_MODE_COUNTER) ? "COUNTER" : "RAND_UNIQUE");
-				
-				if (_ivMode == IV_MODE_COUNTER) {
-					Serial.print("[ENC][TX] ivCounter = ");
-					Serial.println(usedCtr);                // 方便核對 counter 是否連續/不跳號
-				} else {
-					Serial.println("[ENC][TX] ivCounter = (n/a)");
-				}
-
-				dumpHex("[ENC][TX] IV  = ", iv, ENC_IV_LEN);
-				Serial.print("[ENC][TX] PLAIN(str) = ");
-				Serial.println(plainBuf);
-				dumpHex("[ENC][TX] TAG = ", tag, ENC_TAG_LEN);
-				dumpHex("[ENC][TX] CT  = ", cipher, (size_t)plainLen);
-			}
-		}
-		#else
-		// 非 ESP32：沒有 mbedtls AES-GCM，強制當明文送（保持可編譯/可跑）
-		data[verPos] = 0x00;
-
-		int copyLen = plainLen;
-		if (copyLen > maxPayload) copyLen = maxPayload;
-
-		memcpy(&data[idx], plainBuf, (size_t)copyLen); idx += copyLen;
-		data[plenPos] = (uint8_t)copyLen;
-		#endif
-
-	} else {
-		// 明文 payload = plainBuf bytes（不含 '\0'）
-		if (plainLen > maxPayload) {                     // payload 不夠就截短
-			plainLen = maxPayload;
-			plainBuf[plainLen] = '\0';
-		}
-		memcpy(&data[idx], plainBuf, (size_t)plainLen); 
-		idx += plainLen;
-		data[plenPos] = (uint8_t)plainLen;               // 回填 payload_len
-	}
-
-	// 變長度發送（不再硬塞 LEN_DATA）
-	copyShortAddress(_lastSentToShortAddress, myDistantDevice->getByteShortAddress()); // 記住這次送給誰（供 _sentAck 使用）
-	DW1000.setDelay(DW1000Time(_replyDelayTimeUS, DW1000Time::MICROSECONDS));          // 設定回覆延遲（符合 ranging 時序）
-	DW1000.setData(data, (uint16_t)idx);                                               // 用 idx 當「實際封包長度」
-	DW1000.startTransmit();                                                            // 送出 RANGE_REPORT
->>>>>>> d817fcb890058d06552972a889960e7de5a3cbd8
 }
 	// ========= [End Add] =========
 

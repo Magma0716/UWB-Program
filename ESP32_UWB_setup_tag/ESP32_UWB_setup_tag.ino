@@ -7,7 +7,7 @@
 #include "DW1000.h"
 #include <WiFiUdp.h>
 #include <WiFi.h>
-#include "link.h"
+#include "ㄋ.h"
 
 #define SPI_SCK 18
 #define SPI_MISO 19
@@ -87,15 +87,15 @@ void loop()
     }
 }
 
-unsigned long lastTime = 0;
+float lastTime = 0;
 
 void newRange()
 {
   // calculate time difference
-  unsigned long nowTime = millis();
-  unsigned long timeDiff = 0;
+  float nowTime = millis();
+  float timeDiff = 0;
   if(lastTime != 0) timeDiff = nowTime - lastTime;
-  lastTime = now;
+  lastTime = nowTime;
 
   // variable
   auto ShortAddress = DW1000Ranging.getDistantDevice()->getShortAddress();

@@ -33,7 +33,7 @@ while len(data) < DATA_LIMIT:
             if len(arr) == 4:
                 try:
                     data.append({
-                        'seq': int(arr[0]),
+                        'seq': int(float(arr[0])),
                         'distance_m': float(arr[1]),
                         'interval_ms': float(arr[2]),
                         'pad_inferred': int(arr[3])
