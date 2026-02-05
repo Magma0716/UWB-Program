@@ -39,7 +39,7 @@ void loop() {
   if (packetReady) {
     packetReady = false;
 
-    uint16_t len = DW1000.getDataLength();
+    uint16_t len = DW1000.getDataLength() + 2;
     if (len > 1024) len = 1024;
 
     DW1000.getData(rxBuffer, len);

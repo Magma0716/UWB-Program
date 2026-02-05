@@ -28,7 +28,7 @@ def get_packet_structure(b):
             ("Seq\nNum",      1, "#FEFDE8"),
             ("Tag\nLongAdr",  8, "#FEFDE8"),
             ("Tag\nShortAdr", 2, "#FEFDE8"),
-            ("GarbageData", 33,"#F2F2F2"),
+            ("GarbageData", 78,"#F2F2F2"),
             ("CRC",         2, "#FEE8E8")
         ]
         return "Blink", struct
@@ -67,7 +67,7 @@ def get_packet_structure(b):
                 ("Anc\nNum",      1,  "#ECFEE8"),
                 ("Anc\nShortAdr", 2,  "#ECFEE8"),
                 ("Anc\nReply",    2,  "#ECFEE8"),
-                ("GarbageData",   30, "#F2F2F2"),
+                ("GarbageData",   75, "#F2F2F2"),
                 ("CRC",           2,  "#FEE8E8")
             ]
             return "Poll", struct
@@ -102,7 +102,7 @@ def get_packet_structure(b):
                 ("Tag\nPollSent",   5, "#ECFEE8"),
                 ("Tag\nPollAckRec", 5, "#ECFEE8"),
                 ("Anc\nRangeSent",  5, "#ECFEE8"),
-                ("GarbageData",     17,"#F2F2F2"),
+                ("GarbageData",     62,"#F2F2F2"),
                 ("CRC",             2, "#FEE8E8")
             ]
             return "Range/Final", struct
@@ -119,26 +119,46 @@ def get_packet_structure(b):
                 ("Tag\nShortAdr",       2, "#FEFDE8"),
                 ("Func",                1, "#ECFEE8"),
                 ("Encryption\n(False)", 1, "#FDE8FE"),
+                ("Length",              1, "#FDE8FE"),
                 ("Chiptext",            4, "#FDE8FE"),
                 ("CRC",                 2, "#FEE8E8")
             ]
             return "Range_Report (Encryption - False)", struct
             
         # 加密
+        padding = b[11]-32
         if func == 0x03 and encryption == 0x01:
-            struct += [
-                ("Mac\nHeader",        2, "#FEFDE8"),
-                ("Seq\nNum",           1, "#FEFDE8"),
-                ("PanID",              2, "#FEFDE8"),
-                ("Broadcast",          2, "#FEFDE8"),
-                ("Tag\nShortAdr",      2, "#FEFDE8"),
-                ("Func",               1, "#ECFEE8"),
-                ("Encryption\n(True)", 1, "#FDE8FE"),
-                ("IV",                 12,"#FDE8FE"),
-                ("Tag",                16,"#FDE8FE"),
-                ("Chiptext",           4, "#FDE8FE"),
-                ("CRC",                2, "#FEE8E8")
-            ]
+            if padding == 0:
+                struct += [
+                    ("Mac\nHeader",        2, "#FEFDE8"),
+                    ("Seq\nNum",           1, "#FEFDE8"),
+                    ("PanID",              2, "#FEFDE8"),
+                    ("Broadcast",          2, "#FEFDE8"),
+                    ("Tag\nShortAdr",      2, "#FEFDE8"),
+                    ("Func",               1, "#ECFEE8"),
+                    ("Encryption\n(True)", 1, "#FDE8FE"),
+                    ("Length",             1, "#FDE8FE"),
+                    ("IV",                 12,"#FDE8FE"),
+                    ("Tag",                16,"#FDE8FE"),
+                    ("Chiptext",           4, "#FDE8FE"),
+                    ("CRC",                2, "#FEE8E8")
+                ]
+            else:
+                struct += [
+                    ("Mac\nHeader",        2, "#FEFDE8"),
+                    ("Seq\nNum",           1, "#FEFDE8"),
+                    ("PanID",              2, "#FEFDE8"),
+                    ("Broadcast",          2, "#FEFDE8"),
+                    ("Tag\nShortAdr",      2, "#FEFDE8"),
+                    ("Func",               1, "#ECFEE8"),
+                    ("Encryption\n(True)", 1, "#FDE8FE"),
+                    ("Length",             1, "#FDE8FE"),
+                    ("IV",                 12,"#FDE8FE"),
+                    ("Tag",                16,"#FDE8FE"),
+                    ("Chiptext",           4, "#FDE8FE"),
+                    ("Padding",      padding, "#FDE8FE"),
+                    ("CRC",                2, "#FEE8E8")
+                ]
             return "Range_Report (Encryption - True)", struct
 
         return "Range_Failed", [("Data", len(b))]
@@ -151,34 +171,51 @@ def draw_packet(hex_string):
     b = hex_to_bytes(hex_string)
     pkt_type, struct = get_packet_structure(b)
 
-    fig, ax = plt.subplots(figsize=(14, 4))
-    x = 0
+    fig, ax = plt.subplots(figsize=(16, 5))
+    x = 0  # 矩形的起點
     idx = 0
 
     for name, length, color in struct:
+        # --- 核心修正 1：視覺寬度定義 ---
+        # 如果是 Garbage Data (62B)，我們縮小寬度，但其他欄位保持原樣
+        visual_width = length / 2 if length >= 30 else length
+        
+        # --- 核心修正 2：移除 x 的額外間距 ---
+        # 直接使用 visual_width，不要用 max(visual_width, 1)
         rect = Rectangle(
-            (x, 1.84), length, 0.6,
-            edgecolor="black", facecolor=color
+            (x, 1.84), visual_width, 0.8,
+            edgecolor="black", facecolor=color,
+            linewidth=1.5  # 加粗邊框可以蓋掉視覺微隙
         )
         ax.add_patch(rect)
 
-        seg = b[idx:idx+length]
-        text = " ".join(f"{v:02X}" for v in seg)
+        # 處理文字換行
+        seg = b[idx : idx + length]
+        hex_list = [f"{v:02X}" for v in seg]
+        
+        if length >= 30:
+            # 每 14 個 bytes 換行，視覺上比較美觀
+            n = 20
+            lines = [" ".join(hex_list[i:i+n]) for i in range(0, len(hex_list), n)]
+            text = "\n".join(lines)
+        else:
+            text = " ".join(hex_list)
 
-        ax.text(x + length/2, 2.5, name, ha="center", fontsize=5.5, weight="bold")
-        ax.text(x + length/2, 2.1, text, ha="center", fontsize=8, family="monospace")
-        ax.text(x + length/2, 1.7, f"{length}B", ha="center", fontsize=8, color="gray")
+        # 文字標註 (調整 Y 軸位置確保不重疊)
+        ax.text(x + visual_width/2, 2.7, name, ha="center", va="bottom", fontsize=7, weight="bold")
+        ax.text(x + visual_width/2, 2.24, text, ha="center", va="center", fontsize=8, family="monospace")
+        ax.text(x + visual_width/2, 1.65, f"{length}B", ha="center", va="top", fontsize=8, color="gray")
 
-        x += max(length, 1)
+        # --- 核心修正 3：精準遞增 x ---
+        x += visual_width  # 讓下一個矩形的起點剛好等於上一個的終點
         idx += length
 
-    ax.set_xlim(0, x + 1)
-    ax.set_ylim(0.5, 3.6)
-    ax.set_title(f"UWB Packet: {pkt_type}", fontsize=14)
+    ax.set_xlim(0, x)
+    ax.set_ylim(1.0, 3.5)
+    ax.set_title(f"UWB Packet: {pkt_type}", fontsize=14, pad=20)
     ax.axis("off")
     plt.tight_layout()
     plt.show()
-
 # Main
 if __name__ == "__main__":
     Ihex = input("Hex Packet: ").strip()
@@ -187,6 +224,5 @@ if __name__ == "__main__":
     draw_packet(Ihex)
     
 '''
-41 88 77 CA DE A4 9C AA AA 03 01 2D 07 00 00 00 00 00 00 00 00 00 00 E2 9B 5B 75 E8 6E 4B E2 D8 38 8C 3F 5A 9F 26 62 2A 57 7D 24 6A 9D
-41 88 77 CA DE A4 9C AA AA 03 00 2A 57 7D 24 6A 9D
+41 88 C6 CA DE FF FF A4 9C 02 01 AA AA 00 E0 ED B3 12 16 86 9E EC 12 00 4C 37 25 13 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 A8 3F
 '''

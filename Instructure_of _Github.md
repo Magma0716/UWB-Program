@@ -8,5 +8,7 @@ git push -u origin main
 # safety version
 git add .
 git commit -m "Update"
-git pull origin main
 git push origin main
+
+
+(X)git pull origin main

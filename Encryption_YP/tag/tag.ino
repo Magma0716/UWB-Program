@@ -25,15 +25,8 @@ void setup()
     SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
     DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
 
-    // ============================================
-    // ★★★ 實驗參數設定區 ★★★（不寫則使用預設值）
-    // ============================================
-
-    // 1) 除錯模式 (true=印出 KEY / IV / TAG / CT 等資訊)
-    //    預設：false（不輸出）
-    DW1000Ranging.setEncryptionDebugFlag(true);
-
-    // ============================================
+    // 參數設定
+    DW1000Ranging.setEncryptionDebugFlag(false); // 印出 (KEY / IV / TAG / CT)
 
     //define the sketch as anchor. It will be great to dynamically change the type of module
     DW1000Ranging.attachNewRange(newRange);
@@ -51,11 +44,11 @@ void loop()
     DW1000Ranging.loop();
 }
 
-unsigned long lastTime = 0; // 用來計算兩次接收的時間差 (Latency)
+unsigned long lastTime = 0;
 
 void newRange()
 {
-    unsigned long now = millis();
+    unsigned long now = micros();
     unsigned long timeDiff = 0;
 
     // 計算距離上一次收到數據經過了多久 (Latency / 負載指標)

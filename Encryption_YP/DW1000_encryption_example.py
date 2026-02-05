@@ -58,7 +58,7 @@ if not hasattr(serial, "Serial"):
     )
 
 # ================= 設定區 (請修改這裡) =================
-COM_PORT = "/dev/cu.usbserial-02E2277A"
+COM_PORT = "COM4"
 BAUD_RATE = 115200
 MAX_SAMPLES = 200
 
@@ -292,7 +292,7 @@ def main():
     timestamp = time.strftime("%Y%m%d-%H%M%S")
 
     # filename label（檔名允許 UNK；圖上用較短標題避免爆版）
-    pad_str = str(pad_mode) if pad_mode is not None else "UNK"
+    pad_str = str(pad_mode) if pad_mode is not None else "UNK" 
     iv_label = iv_mode if iv_mode else "UNK"
     auto_label = f"ENC_{enc_str}_IV_{iv_label}_PAD{pad_str}"
     if iv_mode == "COUNTER" and iv_ctr is not None:
@@ -369,6 +369,7 @@ def main():
     if SAVE_PNG:
         plt.savefig(png_path, dpi=200)
 
+    plt.savefig('')
     plt.show()
 
 

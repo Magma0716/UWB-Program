@@ -2,6 +2,7 @@ import pandas as pd
 import serial
 import matplotlib.pyplot as plt
 import time
+from datetime import datetime
 
 '''
 seq: rounded delay
@@ -10,10 +11,16 @@ interval_ms: raw delay
 pad_inferred_from_data: padding
 '''
 
+'''
+no encryption 0 padding - 
+
+'''
+
+
 # connect
-PORT = 'COM3'
+PORT = 'COM4'
 BAUD_RATE = 115200
-DATA_LIMIT = 200
+DATA_LIMIT = 30
 
 data = []
 
@@ -23,22 +30,28 @@ time.sleep(2)
 
 print('start receive date...')
 
+count = 1
+packageLoss = 0
 while len(data) < DATA_LIMIT:
     if ser.in_waiting > 0:
         line = ser.readline().decode('utf-8').strip()
         
         if line:
             arr = line.split(',')
-            print(arr)
-            if len(arr) == 4:
+            print(f'{count} -> {arr}')
+            if len(arr) == 3 and arr[0] == 'DATA':
                 try:
                     data.append({
-                        'seq': int(float(arr[0])),
-                        'distance_m': float(arr[1]),
-                        'interval_ms': float(arr[2]),
-                        'pad_inferred': int(arr[3])
+                        'dis': float(arr[2]),
+                        'ms':  float(arr[1]) / 1000
                     })
+                    
+                    if float(arr[1]) / 1000 > 150:
+                        packageLoss += 1
+                    
+                    count += 1
                 except:
+                    print('can\'t received')
                     continue
 ser.close()
 print('receive finish!!')
@@ -48,11 +61,11 @@ print('receive finish!!')
 df = pd.DataFrame(data)
 
 # pre-data
-dist = df['distance_m']
+dist = df['dis']
 distAvg = dist.mean()
 distStd = dist.std()
 
-intv = df['interval_ms']
+intv = df['ms']
 intvAvg = intv.mean()
 intvStd = intv.std()
 
@@ -62,14 +75,14 @@ fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 # left chart
 ax1.plot(
     df.index, dist, 
-    color='#6441ff', marker='o', markersize='4', alpha=0.7, linewidth=1
+    color="#5441ff", marker='o', markersize='4', alpha=0.7, linewidth=1
 )
 ax1.axhline(
     distAvg, 
     color='red', linestyle='--', label=f'Avg: {distAvg:.4f} m'
 )
 
-ax1.set_title(f"Distance\nAvg={distAvg:.4f} m | Std={distStd:.4f} m | DataCount={len(df)}")
+ax1.set_title(f"Distance\nAvg={distAvg:.4f} m | Std={distStd:.4f} m | N={len(df)}")
 ax1.set_ylabel("Measured Distance (m)")
 ax1.set_xlabel("Sample Index")
 ax1.grid(True, which='both', linestyle='-', alpha=0.2)
@@ -85,11 +98,13 @@ ax2.axhline(
     color='red', linestyle='--', label=f'Avg: {intvAvg:.1f} ms'
 )
 
-ax2.set_title(f"System Load / Inter-arrival Time\nAvg={intvAvg:.1f} ms | Std={intvStd:.1f} ms | DataCount={len(df)}")
+ax2.set_title(f"System Load / Inter-arrival Time\nAvg={intvAvg:.1f} ms | Std={intvStd:.1f} ms | N={len(df)} | Packet loss={packageLoss}")
 ax2.set_ylabel("Inter-arrival Time (ms)")
 ax2.set_xlabel("Sample Index")
 ax2.grid(True, which='both', linestyle='-', alpha=0.2)
 ax2.legend(loc='upper right')
 
 plt.tight_layout()
-plt.show()
+padding = '0'
+date = str(datetime.now().strftime('%H%M'))
+plt.savefig(f'.\\Encryption_YP\\UWB_Reports\\Encryption_{padding}padding_{date}.png', dpi=300)

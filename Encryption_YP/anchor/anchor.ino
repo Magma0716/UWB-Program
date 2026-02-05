@@ -23,33 +23,20 @@ void setup()
 {
     Serial.begin(115200);
     delay(1000);
+
     //init the configuration
     SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
 
-    // ============================================
-    // ★★★ 實驗參數設定區 ★★★（不寫則使用預設值）
-    // ============================================
+    // 參數設定
+    DW1000Ranging.setEncryptionFlag(true); // 加密
 
-    // 1) 加密開關 (true=開, false=關)
-    //    預設：false（不加密）
-    DW1000Ranging.setEncryptionFlag(true);
+    DW1000Ranging.setEncryptionDebugFlag(false); // 印出 (KEY / IV / TAG / CT)
 
-    // 2) 除錯模式 (true=印出 KEY / IV / TAG / CT 等資訊)
-    //    預設：false（不輸出）
-    DW1000Ranging.setEncryptionDebugFlag(true);
+    DW1000Ranging.setIVCounter(0); // Counter IV 起始值
 
-    // 3) 設定 COUNTER IV 起始值（只在 IV_MODE_COUNTER 有效）
-    //    預設：0
-    DW1000Ranging.setIVCounter(0);
+    DW1000Ranging.setIVMode(IV_MODE_RAND_UNIQUE); // IV_MODE_COUNTER (4byte + 0), IV_MODE_RAND_UNIQUE (12byte亂數)
 
-    // 4) IV 模式：
-    //    - IV_MODE_COUNTER：IV 前 4 bytes = counter，其餘 0（預設）
-    //    - IV_MODE_RAND_UNIQUE：每次抽 12 bytes 亂數，並用表格檢查「本次 session 不重複」；切換到此模式會清空表
-    DW1000Ranging.setIVMode(IV_MODE_RAND_UNIQUE);
-
-    // 5) Padding 測試：在「距離字串」後面補 '0'（ASCII）增加 payload
-    //    預設：0
-    DW1000Ranging.setPaddingLength(16);
+    DW1000Ranging.setPaddingLength(0); // padding
 
     // ============================================
 
@@ -77,18 +64,28 @@ void loop()
     DW1000Ranging.loop();
 }
 
+unsigned long lastTime = 0;
+
 void newRange()
 {
-    // 輸出: from: {短地址}	 Range: {距離} m  RX power: {接收功率} dBm
-    // 例如: from: A1B2	    Range: 3.01 m	 RX power: -45.00 dBm
-    Serial.print("from: ");
-    Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
-    Serial.print("\t Range: ");
-    Serial.print(DW1000Ranging.getDistantDevice()->getRange());
-    Serial.print(" m");
-    Serial.print("\t RX power: ");
-    Serial.print(DW1000Ranging.getDistantDevice()->getRXPower());
-    Serial.println(" dBm");
+    unsigned long now = micros();
+    unsigned long timeDiff = 0;
+
+    // 計算距離上一次收到數據經過了多久 (Latency / 負載指標)
+    if (lastTime != 0) {
+        timeDiff = now - lastTime;
+    }
+    lastTime = now;
+
+    // 取得距離數據
+    float dist = DW1000Ranging.getDistantDevice()->getRange();
+
+    // 格式化輸出: "DATA,毫秒,公尺"
+    // 例如: DATA,105,3.01
+    Serial.print("DATA,");
+    Serial.print(timeDiff);
+    Serial.print(",");
+    Serial.println(dist);
 }
 
 void newBlink(DW1000Device *device)

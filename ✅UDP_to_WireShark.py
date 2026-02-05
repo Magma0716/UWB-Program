@@ -1,7 +1,7 @@
 import serial
 import socket
 
-SERIAL_PORT = "COM7"
+SERIAL_PORT = "COM9"
 BAUDRATE = 115200
 
 UDP_IP = "255.255.255.255"   # Broadcast
@@ -14,7 +14,7 @@ sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 print(f"Forwarding {SERIAL_PORT} -> UDP {UDP_IP}:{UDP_PORT}")
 
 while True:
-    line = ser.readline().strip()
+    line = ser.readline()
     if line:
         sock.sendto(line, (UDP_IP, UDP_PORT))
         print(str(line)[2:-1:])
