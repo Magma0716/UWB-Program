@@ -11,16 +11,11 @@ interval_ms: raw delay
 pad_inferred_from_data: padding
 '''
 
-'''
-no encryption 0 padding - 
-
-'''
-
-
 # connect
 PORT = 'COM4'
 BAUD_RATE = 115200
-DATA_LIMIT = 30
+DATA_LIMIT = 4000
+padding = '2'
 
 data = []
 
@@ -84,7 +79,7 @@ ax1.axhline(
 
 ax1.set_title(f"Distance\nAvg={distAvg:.4f} m | Std={distStd:.4f} m | N={len(df)}")
 ax1.set_ylabel("Measured Distance (m)")
-ax1.set_xlabel("Sample Index")
+ax1.set_xlabel(f"Sample Index | padding={padding}")
 ax1.grid(True, which='both', linestyle='-', alpha=0.2)
 ax1.legend(loc='upper right')
 
@@ -100,11 +95,12 @@ ax2.axhline(
 
 ax2.set_title(f"System Load / Inter-arrival Time\nAvg={intvAvg:.1f} ms | Std={intvStd:.1f} ms | N={len(df)} | Packet loss={packageLoss}")
 ax2.set_ylabel("Inter-arrival Time (ms)")
-ax2.set_xlabel("Sample Index")
+ax2.set_xlabel(f"Sample Index | padding={padding}")
 ax2.grid(True, which='both', linestyle='-', alpha=0.2)
 ax2.legend(loc='upper right')
 
 plt.tight_layout()
-padding = '0'
+
 date = str(datetime.now().strftime('%H%M'))
+
 plt.savefig(f'.\\Encryption_YP\\UWB_Reports\\Encryption_{padding}padding_{date}.png', dpi=300)

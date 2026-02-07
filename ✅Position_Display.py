@@ -7,7 +7,7 @@ import json
 # ==========================
 # UDP Setting
 # ==========================
-UDP_IP = "10.245.122.37" # 需要改成自己的電腦 IP (cmd -> ipconfig)
+UDP_IP = "192.168.0.108" # 需要改成自己的電腦 IP (cmd -> ipconfig)
 UDP_PORT = 8001
 print(f"*** UDP listening on {UDP_IP}:{UDP_PORT} ***")
 
