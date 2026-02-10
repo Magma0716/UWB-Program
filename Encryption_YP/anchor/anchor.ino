@@ -36,7 +36,7 @@ void setup()
 
     DW1000Ranging.setIVMode(IV_MODE_RAND_UNIQUE); // IV_MODE_COUNTER (4byte + 0), IV_MODE_RAND_UNIQUE (12byte亂數)
 
-    DW1000Ranging.setPaddingLength(2); // padding
+    DW1000Ranging.setPaddingLength(44); // padding
 
     // ============================================
 
