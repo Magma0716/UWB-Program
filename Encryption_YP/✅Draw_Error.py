@@ -15,7 +15,7 @@ pad_inferred_from_data: padding
 PORT = 'COM4'
 BAUD_RATE = 115200
 DATA_LIMIT = 4000
-padding = '44'
+padding = '4'
 
 data = []
 
